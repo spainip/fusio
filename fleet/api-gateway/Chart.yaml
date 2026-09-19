@@ -1,0 +1,6 @@
+apiVersion: v2
+name: fusio
+description: Fusio API management platform for spainip.es
+type: application
+version: 0.1.0
+appVersion: "7.1.0"
