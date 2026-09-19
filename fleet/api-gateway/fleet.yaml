@@ -1,0 +1,5 @@
+defaultNamespace: fusio
+helm:
+  releaseName: fusio
+  takeOwnership: true
+  force: true
