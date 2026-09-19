@@ -112,13 +112,13 @@ spec:
           args:
             - |
               set -u
-              until php bin/fusio migrate; do
+              until php bin/fusio migrate --no-interaction; do
                 sleep 5
               done
-              php bin/fusio marketplace:install fusio || true
-              php bin/fusio marketplace:install developer || true
-              php bin/fusio marketplace:install account || true
-              php bin/fusio marketplace:install swagger-ui || true
+              php bin/fusio marketplace:install fusio --no-interaction || true
+              php bin/fusio marketplace:install developer --no-interaction || true
+              php bin/fusio marketplace:install account --no-interaction || true
+              php bin/fusio marketplace:install swagger-ui --no-interaction || true
               exec apache2-foreground
           envFrom:
             - secretRef:
