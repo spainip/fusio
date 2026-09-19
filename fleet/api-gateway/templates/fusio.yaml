@@ -107,7 +107,7 @@ spec:
         - name: fusio
           image: fusio/fusio:7.1.0
           imagePullPolicy: IfNotPresent
-          workingDir: /var/www/html
+          workingDir: /var/www/html/fusio
           command: ["/bin/sh", "-c"]
           args:
             - |
