@@ -56,12 +56,18 @@ spec:
                   key: MYSQL_ROOT_PASSWORD
           readinessProbe:
             exec:
-              command: ["sh", "-c", "mysqladmin ping -h 127.0.0.1 -u root -p\$MYSQL_ROOT_PASSWORD --silent"]
+              command:
+                - sh
+                - -c
+                - 'mysqladmin ping -h 127.0.0.1 -u root -p$MYSQL_ROOT_PASSWORD --silent'
             initialDelaySeconds: 20
             periodSeconds: 10
           livenessProbe:
             exec:
-              command: ["sh", "-c", "mysqladmin ping -h 127.0.0.1 -u root -p\$MYSQL_ROOT_PASSWORD --silent"]
+              command:
+                - sh
+                - -c
+                - 'mysqladmin ping -h 127.0.0.1 -u root -p$MYSQL_ROOT_PASSWORD --silent'
             initialDelaySeconds: 60
             periodSeconds: 20
           volumeMounts:
