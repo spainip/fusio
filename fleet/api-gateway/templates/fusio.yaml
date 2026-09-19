@@ -106,6 +106,7 @@ spec:
               until php bin/fusio migrate --no-interaction; do
                 sleep 5
               done
+              php bin/fusio marketplace:env - --no-interaction || true
               php bin/fusio marketplace:install fusio --no-interaction || true
               php bin/fusio marketplace:install developer --no-interaction || true
               php bin/fusio marketplace:install account --no-interaction || true
