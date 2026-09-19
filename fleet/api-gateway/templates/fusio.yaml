@@ -111,6 +111,9 @@ spec:
               php bin/fusio marketplace:install developer --no-interaction || true
               php bin/fusio marketplace:install account --no-interaction || true
               php bin/fusio marketplace:install swagger-ui --no-interaction || true
+              # Production mode writes parsed API metadata to these directories.
+              chown -R www-data:www-data cache
+              chmod -R u+rwX,g+rwX cache
               exec apache2-foreground
           envFrom:
             - secretRef:
