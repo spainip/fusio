@@ -1,0 +1,93 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: fusio-mock-api-source
+  namespace: fusio
+  labels:
+    app.kubernetes.io/name: fusio-mock-api
+data:
+  package.json: |
+    {"name":"fusio-mock-api","version":"1.0.0","private":true,"dependencies":{"express":"^5.1.0","swagger-ui-express":"^5.0.1"}}
+  server.js: |
+    const express = require("express");
+    const swaggerUi = require("swagger-ui-express");
+    const app = express();
+    const port = Number(process.env.PORT || 3000);
+    app.use(express.json());
+    const openapi = {
+      openapi: "3.0.3",
+      info: { title: "SpainIP Fusio mock API", version: "1.0.0" },
+      servers: [{ url: "/" }],
+      paths: {
+        "/healthz": { get: { responses: { "200": { description: "Healthy" } } } },
+        "/v1/hello": { get: { responses: { "200": { description: "Greeting" } } } },
+        "/v1/items": { get: { responses: { "200": { description: "Items" } } } }
+      }
+    };
+    app.get("/healthz", (_req,res) => res.json({status:"ok"}));
+    app.get("/v1/hello", (_req,res) => res.json({message:"hello from the SpainIP Fusio mock API"}));
+    app.get("/v1/items", (_req,res) => res.json({items:[{id:1,name:"alpha"},{id:2,name:"bravo"}]}));
+    app.get("/openapi.json", (_req,res) => res.json(openapi));
+    app.use("/docs", swaggerUi.serve, swaggerUi.setup(openapi, {customSiteTitle:"SpainIP Fusio mock API"}));
+    app.listen(port,"0.0.0.0",() => console.log("mock API listening on :"+port));
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: fusio-mock-api
+  namespace: fusio
+  labels:
+    app.kubernetes.io/name: fusio-mock-api
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: fusio-mock-api
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: fusio-mock-api
+    spec:
+      containers:
+        - name: mock-api
+          image: node:22-alpine
+          command: ["sh","-c"]
+          args:
+            - |
+              set -eu
+              mkdir -p /tmp/mock
+              cp /source/package.json /tmp/mock/package.json
+              cp /source/server.js /tmp/mock/server.js
+              cd /tmp/mock
+              npm install --omit=dev --no-audit --no-fund
+              exec node server.js
+          ports:
+            - name: http
+              containerPort: 3000
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: http
+            initialDelaySeconds: 5
+            periodSeconds: 5
+          volumeMounts:
+            - name: source
+              mountPath: /source
+              readOnly: true
+      volumes:
+        - name: source
+          configMap:
+            name: fusio-mock-api-source
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: fusio-mock-api
+  namespace: fusio
+spec:
+  selector:
+    app.kubernetes.io/name: fusio-mock-api
+  ports:
+    - name: http
+      port: 80
+      targetPort: http
