@@ -112,6 +112,8 @@ spec:
           args:
             - |
               set -u
+              base_path="${BASE_PATH:-/apps}"
+              find public/apps -type f \( -name '*.html' -o -name '.htaccess' \) -exec sed -i "s#\${BASE_PATH}#${base_path}#g" {} +
               until php bin/fusio migrate --no-interaction; do
                 sleep 5
               done
