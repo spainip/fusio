@@ -125,6 +125,21 @@ spec:
           envFrom:
             - secretRef:
                 name: fusio-secrets
+          env:
+            - name: APP_PROJECT_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: fusio-secrets
+                  key: FUSIO_PROJECT_KEY
+            - name: APP_CONNECTION
+              valueFrom:
+                secretKeyRef:
+                  name: fusio-secrets
+                  key: FUSIO_CONNECTION
+            - name: APP_MAILER
+              value: native://default
+            - name: APP_MESSENGER
+              value: doctrine://default?table_name=fusio_messenger
           ports:
             - name: http
               containerPort: 80
