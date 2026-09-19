@@ -1,0 +1,148 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: fusio
+  namespace: fusio
+  labels:
+    app.kubernetes.io/name: fusio
+spec:
+  type: ClusterIP
+  selector:
+    app.kubernetes.io/name: fusio
+  ports:
+    - name: http
+      port: 80
+      targetPort: http
+---
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: fusio-dashboard-basic-auth
+  namespace: fusio
+spec:
+  basicAuth:
+    secret: fusio-dashboard-basic-auth
+    removeHeader: true
+    realm: Fusio Dashboard
+---
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: fusio-dashboard-root-redirect
+  namespace: fusio
+spec:
+  redirectRegex:
+    regex: "^https?://api-admin\\.spainip\\.es/$"
+    replacement: "https://api-admin.spainip.es/apps/fusio/"
+    permanent: false
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: fusio-api
+  namespace: fusio
+  annotations:
+    traefik.ingress.kubernetes.io/router.entrypoints: websecure
+    traefik.ingress.kubernetes.io/router.tls: "true"
+    traefik.ingress.kubernetes.io/router.tls.certresolver: acmeresolver
+spec:
+  ingressClassName: traefik
+  rules:
+    - host: api.spainip.es
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: fusio
+                port:
+                  number: 80
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: fusio-dashboard
+  namespace: fusio
+  annotations:
+    traefik.ingress.kubernetes.io/router.entrypoints: websecure
+    traefik.ingress.kubernetes.io/router.tls: "true"
+    traefik.ingress.kubernetes.io/router.tls.certresolver: acmeresolver
+    traefik.ingress.kubernetes.io/router.middlewares: fusio-fusio-dashboard-basic-auth@kubernetescrd,fusio-fusio-dashboard-root-redirect@kubernetescrd
+spec:
+  ingressClassName: traefik
+  rules:
+    - host: api-admin.spainip.es
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: fusio
+                port:
+                  number: 80
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: fusio
+  namespace: fusio
+  labels:
+    app.kubernetes.io/name: fusio
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: fusio
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: fusio
+    spec:
+      securityContext:
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: fusio
+          image: fusio/fusio:7.1.0
+          imagePullPolicy: IfNotPresent
+          workingDir: /var/www/html
+          command: ["/bin/sh", "-c"]
+          args:
+            - |
+              set -u
+              until php bin/fusio migrate; do
+                sleep 5
+              done
+              php bin/fusio marketplace:install fusio || true
+              php bin/fusio marketplace:install developer || true
+              php bin/fusio marketplace:install account || true
+              php bin/fusio marketplace:install swagger-ui || true
+              exec apache2-foreground
+          envFrom:
+            - secretRef:
+                name: fusio-secrets
+          ports:
+            - name: http
+              containerPort: 80
+          readinessProbe:
+            tcpSocket:
+              port: http
+            initialDelaySeconds: 20
+            periodSeconds: 10
+          livenessProbe:
+            tcpSocket:
+              port: http
+            initialDelaySeconds: 60
+            periodSeconds: 20
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              cpu: 1000m
+              memory: 768Mi
+          securityContext:
+            runAsNonRoot: false
+            allowPrivilegeEscalation: false
