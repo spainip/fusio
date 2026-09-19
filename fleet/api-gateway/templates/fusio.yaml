@@ -17,17 +17,6 @@ spec:
 apiVersion: traefik.io/v1alpha1
 kind: Middleware
 metadata:
-  name: fusio-dashboard-basic-auth
-  namespace: fusio
-spec:
-  basicAuth:
-    secret: fusio-dashboard-basic-auth
-    removeHeader: true
-    realm: Fusio Dashboard
----
-apiVersion: traefik.io/v1alpha1
-kind: Middleware
-metadata:
   name: fusio-dashboard-root-redirect
   namespace: fusio
 spec:
@@ -68,7 +57,7 @@ metadata:
     traefik.ingress.kubernetes.io/router.entrypoints: websecure
     traefik.ingress.kubernetes.io/router.tls: "true"
     traefik.ingress.kubernetes.io/router.tls.certresolver: acmeresolver
-    traefik.ingress.kubernetes.io/router.middlewares: fusio-fusio-dashboard-basic-auth@kubernetescrd,fusio-fusio-dashboard-root-redirect@kubernetescrd
+    traefik.ingress.kubernetes.io/router.middlewares: fusio-fusio-dashboard-root-redirect@kubernetescrd
 spec:
   ingressClassName: traefik
   rules:
