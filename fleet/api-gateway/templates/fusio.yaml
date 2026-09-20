@@ -111,6 +111,10 @@ spec:
               php bin/fusio marketplace:install developer --no-interaction || true
               php bin/fusio marketplace:install account --no-interaction || true
               php bin/fusio marketplace:install swagger-ui --no-interaction || true
+              # Fusio app generation normalizes the API URL with a trailing slash.
+              # The dashboard appends operation paths with a leading slash, so trim it.
+              api_url="${FUSIO_URL%/}"
+              find public/apps -type f -name '*.html' -exec sed -i "s#FUSIO_URL = '${api_url}/'#FUSIO_URL = '${api_url}'#g" {} +
               # Production mode writes parsed API metadata to these directories.
               chown -R www-data:www-data cache
               chmod -R u+rwX,g+rwX cache
