@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: api-gateway-apisix-dashboard
+  namespace: cattle-monitoring-system
+  labels:
+    grafana_dashboard: '1'
+    app.kubernetes.io/name: api-gateway
+data:
+  api-gateway-apisix.json: "{\n  \"annotations\": {\n    \"list\": []\n  },\n  \"editable\": true,\n  \"panels\": [\n    {\n      \"type\": \"stat\",\n      \"title\": \"Requests / second\",\n      \"gridPos\": {\n        \"h\": 4,\n        \"w\": 8,\n        \"x\": 0,\n        \"y\": 0\n      },\n      \"targets\": [\n        {\n          \"expr\": \"sum(rate(apisix_http_status[5m]))\",\n          \"legendFormat\": \"requests/s\"\n        }\n      ]\n    },\n    {\n      \"type\": \"stat\",\n      \"title\": \"5xx / second\",\n      \"gridPos\": {\n        \"h\": 4,\n        \"w\": 8,\n        \"x\": 8,\n        \"y\": 0\n      },\n      \"targets\": [\n        {\n          \"expr\": \"sum(rate(apisix_http_status{code=~\\\"5..\\\"}[5m]))\",\n          \"legendFormat\": \"5xx/s\"\n        }\n      ]\n    },\n    {\n      \"type\": \"timeseries\",\n      \"title\": \"Latency p95\",\n      \"gridPos\": {\n        \"h\": 8,\n        \"w\": 16,\n        \"x\": 0,\n        \"y\": 4\n      },\n\
+    \      \"targets\": [\n        {\n          \"expr\": \"histogram_quantile(0.95, sum by (le) (rate(apisix_http_latency_bucket[5m])))\",\n          \"legendFormat\": \"p95\"\n        }\n      ]\n    }\n  ],\n  \"schemaVersion\": 39,\n  \"title\": \"APISIX API Gateway\",\n  \"version\": 1,\n  \"uid\": \"24a1b4b5-b0d5-4f3c-9ee7-fee072bec73f\"\n}\n"
